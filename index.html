@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>台指決策核心 V13.0</title>
+    <title>台指決策核心 V14.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --input-bg: #334155; --text: #f1f5f9; --red: #ef4444; --green: #10b981; --gold: #f59e0b; --blue: #3b82f6; --purple: #a855f7; }
@@ -17,6 +17,7 @@
         .portal-bar { display: flex; gap: 8px; padding: 12px 15px; background: #0b1120; overflow-x: auto; border-bottom: 1px solid #333; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .portal-btn { flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; font-size: 11px; text-decoration: none; color: #cbd5e1; border: 1px solid #475569; transition: 0.2s; display: flex; align-items: center; gap: 4px; background: #1e293b; }
         .portal-btn:hover { background: #334155; border-color: #94a3b8; color: #fff; }
+        .portal-icon { font-size: 12px; }
 
         .btn-group { padding: 10px 15px; display: flex; gap: 8px; }
         .btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; }
@@ -59,19 +60,19 @@
 
 <div class="container">
     <div class="header">
-        <h1>🚀 台指決策核心 V13.0</h1>
-        <div class="subtitle">主力總和 • 三關價 • 轉折關鍵點</div>
+        <h1>🚀 台指決策核心 V14.0</h1>
+        <div class="subtitle">玩股網戰情 • 三關價 • 轉折關鍵點</div>
     </div>
 
     <div class="portal-bar">
+        <a href="https://www.wantgoo.com/futures/institutional/net-open-interest" target="_blank" class="portal-btn">
+            <span class="portal-icon">🔗</span> 玩股主力
+        </a>
         <a href="https://www.wantgoo.com/option/put-call-ratio" target="_blank" class="portal-btn">
             <span class="portal-icon">🔗</span> P/C Ratio
         </a>
         <a href="https://www.wantgoo.com/futures/retail-indicator/wmt&" target="_blank" class="portal-btn">
             <span class="portal-icon">🔗</span> 散戶指標
-        </a>
-        <a href="https://www.taifex.com.tw/cht/3/futContractsDate" target="_blank" class="portal-btn">
-            <span class="portal-icon">🔗</span> 期交所法人
         </a>
     </div>
 
@@ -123,11 +124,11 @@
     </div>
 
     <div class="section">
-        <div class="section-title">2. 主力籌碼 (手動總和)</div>
+        <div class="section-title">2. 主力籌碼 (看玩股網填總和)</div>
         <div class="row">
             <div class="col total-input">
-                <label>🦁 法人合計淨口數</label>
-                <input type="number" id="total_sum" placeholder="看期交所網站填入" oninput="calc()">
+                <label>🦁 法人總和 (自+投+外)</label>
+                <input type="number" id="total_sum" placeholder="看玩股網「總和」欄位" oninput="calc()">
             </div>
         </div>
     </div>
@@ -222,19 +223,13 @@
         icon.style.display = 'inline-block';
         try {
             const ts = new Date().getTime();
-            // 抓取大盤最近 5 天資料
             const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?interval=1d&range=5d&_=' + ts)}`);
             const data = await res.json();
             const result = JSON.parse(data.contents).chart.result[0];
             const quotes = result.indicators.quote[0];
-            const timestamps = result.timestamp;
             
             const len = quotes.close.length;
-            // 昨天的數據 (倒數第二筆，如果還沒收盤；如果是盤後抓，可能是最後一筆，這裡取倒數第2筆比較保險是完整日K)
-            // Yahoo API 盤中會即時更新最後一筆，所以昨收通常是 len-2
             let idx = len - 1;
-            // 簡單判斷：如果最後一筆是今天(變動中)，昨收就是 len-2
-            // 這裡直接抓 len-2 當作 "昨日完整K棒" 來算三關價最準
             if (len >= 2) idx = len - 2;
 
             const prevH = quotes.high[idx];
@@ -242,7 +237,6 @@
             const prevC = quotes.close[idx];
             const lastPrice = result.meta.regularMarketPrice;
 
-            // ATR 計算 (5日平均)
             let sum = 0, count = 0;
             for(let i=0; i<len; i++) {
                 if(quotes.high[i]) { sum += (quotes.high[i] - quotes.low[i]); count++; }
@@ -250,7 +244,6 @@
             const atr = count ? Math.round(sum/count) : 250;
 
             document.getElementById('atr').value = atr;
-            // 填入昨日數據以計算三關
             document.getElementById('prev_high').value = prevH;
             document.getElementById('prev_low').value = prevL;
             document.getElementById('prev_close').value = prevC;
@@ -285,7 +278,6 @@
         const pC = parseFloat(document.getElementById('prev_close').value);
 
         if (pH && pL && pC) {
-            // 三關價
             const mid = (pH + pL) / 2;
             const up = pL + (pH - pL) * 0.618;
             const down = pH - (pH - pL) * 0.618;
@@ -294,14 +286,10 @@
             document.getElementById('kp_mid').innerText = Math.round(mid);
             document.getElementById('kp_low').innerText = Math.round(down);
 
-            // CDP 轉折價 (Pivot)
             const cdp = (pH + pL + 2*pC) / 4;
-            const ah = cdp + (pH - pL); // 最高
-            const nh = 2*cdp - pL;      // 近高 (壓)
-            const nl = 2*cdp - pH;      // 近低 (撐)
-            const al = cdp - (pH - pL); // 最低
+            const nh = 2*cdp - pL;      
+            const nl = 2*cdp - pH;      
             
-            // 這裡顯示 CDP 的近高與近低當作轉折參考
             document.getElementById('pivot_p').innerText = Math.round(cdp);
             document.getElementById('pivot_res').innerText = Math.round(nh);
             document.getElementById('pivot_sup').innerText = Math.round(nl);
