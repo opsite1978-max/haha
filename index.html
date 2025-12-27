@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>台指決策核心 V12.0</title>
+    <title>台指決策核心 V13.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --input-bg: #334155; --text: #f1f5f9; --red: #ef4444; --green: #10b981; --gold: #f59e0b; --blue: #3b82f6; --purple: #a855f7; }
@@ -14,21 +14,20 @@
         h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px; color: #fff; }
         .subtitle { font-size: 11px; color: #94a3b8; margin-top: 5px; }
 
-        .chart-container { position: relative; height: 200px; width: 100%; padding: 10px; box-sizing: border-box; background: #0b1120; }
-
-        /* 數據傳送門 */
         .portal-bar { display: flex; gap: 8px; padding: 12px 15px; background: #0b1120; overflow-x: auto; border-bottom: 1px solid #333; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .portal-btn { flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; font-size: 11px; text-decoration: none; color: #cbd5e1; border: 1px solid #475569; transition: 0.2s; display: flex; align-items: center; gap: 4px; background: #1e293b; }
         .portal-btn:hover { background: #334155; border-color: #94a3b8; color: #fff; }
 
         .btn-group { padding: 10px 15px; display: flex; gap: 8px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .btn-auto { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .btn-record { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+        .btn-auto { background: var(--blue); }
+        .btn-record { background: var(--green); }
         .btn-clear { background: #475569; max-width: 60px; }
 
+        .chart-container { position: relative; height: 180px; width: 100%; padding: 10px; box-sizing: border-box; background: #0b1120; }
+
         .section { padding: 0 15px 10px 15px; }
-        .section-title { font-size: 12px; color: #94a3b8; font-weight: 700; margin-bottom: 8px; border-left: 3px solid var(--blue); padding-left: 6px; margin-top: 10px; }
+        .section-title { font-size: 12px; color: #94a3b8; font-weight: 700; margin-bottom: 8px; border-left: 3px solid var(--blue); padding-left: 6px; margin-top: 10px; display: flex; justify-content: space-between; }
         
         .row { display: flex; gap: 8px; margin-bottom: 8px; }
         .col { flex: 1; }
@@ -36,20 +35,22 @@
         input { width: 100%; background: var(--input-bg); border: 1px solid #475569; color: white; padding: 10px; border-radius: 6px; font-size: 16px; font-weight: 600; text-align: center; outline: none; }
         input:focus { border-color: var(--blue); background: #1e293b; }
 
-        /* 顏色識別 */
         .hl-input input { border-color: var(--gold); background: #422006; color: #fbbf24; } 
-        .trust-input input { border-color: var(--red); background: #450a0a; color: #fca5a5; } 
-        .sf-input input { border-color: var(--green); background: #064e3b; color: #86efac; } 
         .total-input input { border-color: var(--purple); background: #3b0764; color: #d8b4fe; font-size: 18px; }
-
         .retail-group { border: 1px dashed #475569; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
-        .retail-label { font-size: 11px; color: #aaa; margin-bottom: 5px; text-align: center; font-weight: bold; }
+
+        /* 關鍵點位顯示區 */
+        .key-levels-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 10px; }
+        .level-item { text-align: center; padding: 5px; background: #1e293b; border-radius: 4px; }
+        .level-title { font-size: 10px; color: #94a3b8; }
+        .level-val { font-size: 14px; font-weight: bold; color: #fff; }
+        .level-up { color: #ef4444; } .level-mid { color: #f59e0b; } .level-down { color: #10b981; }
 
         .verdict-box { background: #020617; padding: 15px; text-align: center; border-top: 1px solid #333; }
         .verdict { font-size: 24px; font-weight: 900; margin-bottom: 5px; }
         .desc { font-size: 12px; color: #94a3b8; }
-        
         .history-log { max-height: 80px; overflow-y: auto; font-size: 10px; color: #666; padding: 10px; border-top: 1px solid #333; }
+        
         #loading { display: none; animation: spin 1s infinite linear; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
@@ -58,19 +59,19 @@
 
 <div class="container">
     <div class="header">
-        <h1>🚀 台指決策核心 V12.0</h1>
-        <div class="subtitle">全自動抓取 • 期交所直連 • 散戶拆解</div>
+        <h1>🚀 台指決策核心 V13.0</h1>
+        <div class="subtitle">主力總和 • 三關價 • 轉折關鍵點</div>
     </div>
 
     <div class="portal-bar">
         <a href="https://www.wantgoo.com/option/put-call-ratio" target="_blank" class="portal-btn">
-            <span class="portal-icon">🔗</span> 玩股網 P/C
+            <span class="portal-icon">🔗</span> P/C Ratio
         </a>
         <a href="https://www.wantgoo.com/futures/retail-indicator/wmt&" target="_blank" class="portal-btn">
-            <span class="portal-icon">🔗</span> 散戶小台指標
+            <span class="portal-icon">🔗</span> 散戶指標
         </a>
         <a href="https://www.taifex.com.tw/cht/3/futContractsDate" target="_blank" class="portal-btn">
-            <span class="portal-icon">🔗</span> 期交所確認
+            <span class="portal-icon">🔗</span> 期交所法人
         </a>
     </div>
 
@@ -79,8 +80,8 @@
     </div>
 
     <div class="btn-group">
-        <button class="btn btn-auto" onclick="superAutoFetch()">
-            ⚡ 一鍵全自動抓取 <span id="loading">↻</span>
+        <button class="btn btn-auto" onclick="autoFetch()">
+            ⚡ 抓取昨收/波動 <span id="loading">↻</span>
         </button>
         <button class="btn btn-record" onclick="recordData()">
             💾 記錄
@@ -89,11 +90,26 @@
     </div>
 
     <div class="section">
-        <div class="section-title">1. 價格與 P/C (基礎)</div>
+        <div class="section-title">🔑 今日關鍵點位 (依昨收計算)</div>
+        <div class="key-levels-box">
+            <div class="level-item"><div class="level-title">上關 (壓)</div><div id="kp_high" class="level-val level-up">--</div></div>
+            <div class="level-item"><div class="level-title">中關 (分)</div><div id="kp_mid" class="level-val level-mid">--</div></div>
+            <div class="level-item"><div class="level-title">下關 (撐)</div><div id="kp_low" class="level-val level-down">--</div></div>
+            <div class="level-item"><div class="level-title">轉折壓</div><div id="pivot_res" class="level-val level-up">--</div></div>
+            <div class="level-item"><div class="level-title">轉折價</div><div id="pivot_p" class="level-val level-mid">--</div></div>
+            <div class="level-item"><div class="level-title">轉折撐</div><div id="pivot_sup" class="level-val level-down">--</div></div>
+        </div>
+        <div style="display:none;">
+            <input id="prev_high"><input id="prev_low"><input id="prev_close">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">1. 價格與 P/C</div>
         <div class="row">
             <div class="col hl-input">
-                <label>📍 台指期</label>
-                <input type="number" id="tx" placeholder="自動抓取..." oninput="calc()">
+                <label>📍 台指期 (目前)</label>
+                <input type="number" id="tx" placeholder="輸入..." oninput="calc()">
             </div>
             <div class="col">
                 <label>🛡️ P/C Ratio (%)</label>
@@ -107,52 +123,38 @@
     </div>
 
     <div class="section">
-        <div class="section-title">2. 土洋戰情 (自動抓取)</div>
+        <div class="section-title">2. 主力籌碼 (手動總和)</div>
         <div class="row">
             <div class="col total-input">
-                <label>🦁 法人總和 (自+投+外)</label>
-                <input type="number" id="total_sum" placeholder="自動計算" oninput="calc()">
-            </div>
-        </div>
-        <div class="row">
-            <div class="col trust-input">
-                <label>🏦 投信 (護盤)</label>
-                <input type="number" id="trust" placeholder="自動抓取" oninput="calc()">
-            </div>
-            <div class="col sf-input">
-                <label>👽 外資 (總額)</label>
-                <input type="number" id="small_foreign" placeholder="自動抓取" oninput="calc()">
+                <label>🦁 法人合計淨口數</label>
+                <input type="number" id="total_sum" placeholder="看期交所網站填入" oninput="calc()">
             </div>
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">3. 散戶精細拆解 (手動輸入)</div>
-        
+        <div class="section-title">3. 散戶 (輸入看盤軟體數值)</div>
         <div class="retail-group">
-            <div class="retail-label">▼ 小台指 (MTX)</div>
             <div class="row">
                 <div class="col">
-                    <label style="color:#fca5a5;">多單口數</label>
-                    <input type="number" id="mtx_long" placeholder="例如 35000" style="color:#fca5a5; border-color:#991b1b;" oninput="calc()">
+                    <label style="color:#fca5a5;">小台多單</label>
+                    <input type="number" id="mtx_long" placeholder="量" style="color:#fca5a5; border-color:#991b1b;" oninput="calc()">
                 </div>
                 <div class="col">
-                    <label style="color:#86efac;">空單口數</label>
-                    <input type="number" id="mtx_short" placeholder="例如 32000" style="color:#86efac; border-color:#065f46;" oninput="calc()">
+                    <label style="color:#86efac;">小台空單</label>
+                    <input type="number" id="mtx_short" placeholder="量" style="color:#86efac; border-color:#065f46;" oninput="calc()">
                 </div>
             </div>
         </div>
-
         <div class="retail-group">
-            <div class="retail-label">▼ 微台指 (TMF)</div>
             <div class="row">
                 <div class="col">
-                    <label style="color:#fca5a5;">多單口數</label>
-                    <input type="number" id="tmf_long" placeholder="多單" style="color:#fca5a5; border-color:#991b1b;" oninput="calc()">
+                    <label style="color:#fca5a5;">微台多單</label>
+                    <input type="number" id="tmf_long" placeholder="量" style="color:#fca5a5; border-color:#991b1b;" oninput="calc()">
                 </div>
                 <div class="col">
-                    <label style="color:#86efac;">空單口數</label>
-                    <input type="number" id="tmf_short" placeholder="空單" style="color:#86efac; border-color:#065f46;" oninput="calc()">
+                    <label style="color:#86efac;">微台空單</label>
+                    <input type="number" id="tmf_short" placeholder="量" style="color:#86efac; border-color:#065f46;" oninput="calc()">
                 </div>
             </div>
         </div>
@@ -160,7 +162,7 @@
 
     <div class="verdict-box">
         <div id="verdict" class="verdict" style="color:#64748b">等待數據</div>
-        <div id="desc" class="desc">全自動分析內資護盤與外資賣壓</div>
+        <div id="desc" class="desc">填寫後自動分析多空</div>
         
         <div style="display:flex; justify-content:space-around; margin-top:10px; border-top:1px dashed #333; padding-top:10px;">
             <div>
@@ -179,7 +181,7 @@
 
 <script>
     let myChart;
-    const ids = ['tx', 'atr', 'total_sum', 'trust', 'small_foreign', 'pc', 'mtx_long', 'mtx_short', 'tmf_long', 'tmf_short'];
+    const ids = ['tx', 'atr', 'total_sum', 'pc', 'mtx_long', 'mtx_short', 'tmf_long', 'tmf_short', 'prev_high', 'prev_low', 'prev_close'];
 
     window.onload = () => {
         ids.forEach(id => {
@@ -215,128 +217,49 @@
         });
     }
 
-    // --- 超級全自動抓取 (整合版) ---
-    async function superAutoFetch() {
+    async function autoFetch() {
         const icon = document.getElementById('loading');
         icon.style.display = 'inline-block';
-        
-        // 1. 抓報價與波動
-        await autoFetchPrice();
-        // 2. 抓期交所法人
-        await autoFetchTaifex();
-        
-        icon.style.display = 'none';
-        calc();
-    }
-
-    async function autoFetchPrice() {
         try {
             const ts = new Date().getTime();
+            // 抓取大盤最近 5 天資料
             const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?interval=1d&range=5d&_=' + ts)}`);
             const data = await res.json();
             const result = JSON.parse(data.contents).chart.result[0];
-            const last = result.meta.regularMarketPrice;
             const quotes = result.indicators.quote[0];
+            const timestamps = result.timestamp;
             
+            const len = quotes.close.length;
+            // 昨天的數據 (倒數第二筆，如果還沒收盤；如果是盤後抓，可能是最後一筆，這裡取倒數第2筆比較保險是完整日K)
+            // Yahoo API 盤中會即時更新最後一筆，所以昨收通常是 len-2
+            let idx = len - 1;
+            // 簡單判斷：如果最後一筆是今天(變動中)，昨收就是 len-2
+            // 這裡直接抓 len-2 當作 "昨日完整K棒" 來算三關價最準
+            if (len >= 2) idx = len - 2;
+
+            const prevH = quotes.high[idx];
+            const prevL = quotes.low[idx];
+            const prevC = quotes.close[idx];
+            const lastPrice = result.meta.regularMarketPrice;
+
+            // ATR 計算 (5日平均)
             let sum = 0, count = 0;
-            for(let i=0; i<quotes.high.length; i++) if(quotes.high[i]) { sum += (quotes.high[i] - quotes.low[i]); count++; }
+            for(let i=0; i<len; i++) {
+                if(quotes.high[i]) { sum += (quotes.high[i] - quotes.low[i]); count++; }
+            }
             const atr = count ? Math.round(sum/count) : 250;
 
             document.getElementById('atr').value = atr;
-            // 如果台指期沒填，先填入加權指數當參考
-            if(!document.getElementById('tx').value) document.getElementById('tx').value = Math.round(last);
-        } catch(e) { console.log('價格抓取失敗'); }
-    }
+            // 填入昨日數據以計算三關
+            document.getElementById('prev_high').value = prevH;
+            document.getElementById('prev_low').value = prevL;
+            document.getElementById('prev_close').value = prevC;
 
-    async function autoFetchTaifex() {
-        // 來源備援：中文日盤 → 英文日盤
-        const sources = [
-            'https://www.taifex.com.tw/cht/3/futContractsDateExcel',
-            'https://www.taifex.com.tw/enl/eng3/futContractsDateView?menuid1=03'
-        ];
-
-        try {
-            const { dealerNet, trustNet, foreignNet, reportDate } = await fetchTaifexNetOI(sources);
-
-            document.getElementById('trust').value = Math.round(trustNet);
-            // 這裡將外資總額填入 "外資" 欄位 (原小外資欄位)
-            document.getElementById('small_foreign').value = Math.round(foreignNet);
-            document.getElementById('total_sum').value = Math.round(dealerNet + trustNet + foreignNet);
-
-            // 更新日期顯示
-            const subtitle = document.querySelector('.subtitle');
-            if (subtitle && reportDate) subtitle.innerText = `全自動抓取 • 法人資料日：${reportDate}`;
-        } catch (e) {
-            alert('期交所法人抓取失敗：' + (e.message || '連線失敗'));
-        }
-    }
-
-    // 核心爬蟲邏輯 (ChatGPT 提供)
-    async function fetchTaifexNetOI(urlList) {
-        let lastErr = null;
-        for (const url of urlList) {
-            try {
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}&_=${Date.now()}`);
-                const data = await res.json();
-                const html = data.contents;
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                const reportDate = extractTaifexDate(doc.body.innerText);
-
-                // 找表格
-                const tables = Array.from(doc.querySelectorAll('table'));
-                const table = tables.find(t => t.innerText.includes('臺股期貨')) || tables[0];
-                if (!table) throw new Error('找不到表格');
-
-                const rows = Array.from(table.querySelectorAll('tr'))
-                    .map(tr => Array.from(tr.querySelectorAll('th,td')).map(td => td.innerText.trim()));
-
-                // 定位表頭
-                const headerRowIdx = rows.findIndex(r => r.join(' ').includes('未平倉') && r.join(' ').includes('多空淨額'));
-                if (headerRowIdx < 0) throw new Error('找不到表頭');
-
-                // 定位口數欄位 (倒推法)
-                const headerSlice = rows.slice(headerRowIdx, headerRowIdx + 6);
-                const flat = headerSlice.map(r => r.map(x => x.replace(/\s+/g, ' ')));
-                const leafIdx = flat.findIndex(r => r.filter(x => x === '口數').length >= 2);
-                if (leafIdx < 0) throw new Error('找不到口數欄');
-                
-                const leafRow = rows[headerRowIdx + leafIdx];
-                const qtyIndices = [];
-                leafRow.forEach((cell, i) => { if (cell === '口數') qtyIndices.push(i); });
-                if (qtyIndices.length < 6) throw new Error('口數欄數量異常');
-                const oiNetQtyIndex = qtyIndices[5]; 
-
-                // 抓數據
-                const dataRows = rows.filter(r => r.includes('臺股期貨'));
-                const dealerRow = dataRows.find(r => r.includes('自營商'));
-                const trustRow  = dataRows.find(r => r.includes('投信'));
-                const foreignRow = dataRows.find(r => r.includes('外資'));
-                
-                if (!dealerRow || !trustRow || !foreignRow) throw new Error('缺少法人列');
-
-                return { 
-                    dealerNet: parseIntSafe(dealerRow[oiNetQtyIndex]),
-                    trustNet: parseIntSafe(trustRow[oiNetQtyIndex]),
-                    foreignNet: parseIntSafe(foreignRow[oiNetQtyIndex]),
-                    reportDate 
-                };
-            } catch (e) { lastErr = e; }
-        }
-        throw lastErr || new Error('全部來源都失敗');
-    }
-
-    function parseIntSafe(x) {
-        if (x == null) return 0;
-        const s = String(x).replace(/,/g, '').trim();
-        const n = parseInt(s, 10);
-        return Number.isFinite(n) ? n : 0;
-    }
-
-    function extractTaifexDate(text) {
-        let m = text.match(/日期\s*([0-9]{4}\/[0-9]{2}\/[0-9]{2})/);
-        if (m) return m[1];
-        m = text.match(/([0-9]{4}\/[0-9]{2}\/[0-9]{2})/);
-        return m ? m[1] : '';
+            if(!document.getElementById('tx').value) document.getElementById('tx').value = Math.round(lastPrice);
+            
+            calc();
+        } catch(e) { alert('抓取失敗，請檢查網路'); }
+        icon.style.display = 'none';
     }
 
     function calc() {
@@ -347,43 +270,52 @@
 
         const tx = parseInt(document.getElementById('tx').value);
         const atr = parseInt(document.getElementById('atr').value) || 250;
-        
         const total = parseInt(document.getElementById('total_sum').value) || 0;
-        const trust = parseInt(document.getElementById('trust').value) || 0;
-        const sf = parseInt(document.getElementById('small_foreign').value) || 0;
         const pc = parseFloat(document.getElementById('pc').value) || 100;
         
         const mtx_L = parseInt(document.getElementById('mtx_long').value) || 0;
         const mtx_S = parseInt(document.getElementById('mtx_short').value) || 0;
         const tmf_L = parseInt(document.getElementById('tmf_long').value) || 0;
         const tmf_S = parseInt(document.getElementById('tmf_short').value) || 0;
-        
         const retail_net = (mtx_L - mtx_S) + ((tmf_L - tmf_S) * 0.2);
+
+        // --- 三關價與轉折價計算 ---
+        const pH = parseFloat(document.getElementById('prev_high').value);
+        const pL = parseFloat(document.getElementById('prev_low').value);
+        const pC = parseFloat(document.getElementById('prev_close').value);
+
+        if (pH && pL && pC) {
+            // 三關價
+            const mid = (pH + pL) / 2;
+            const up = pL + (pH - pL) * 0.618;
+            const down = pH - (pH - pL) * 0.618;
+
+            document.getElementById('kp_high').innerText = Math.round(up);
+            document.getElementById('kp_mid').innerText = Math.round(mid);
+            document.getElementById('kp_low').innerText = Math.round(down);
+
+            // CDP 轉折價 (Pivot)
+            const cdp = (pH + pL + 2*pC) / 4;
+            const ah = cdp + (pH - pL); // 最高
+            const nh = 2*cdp - pL;      // 近高 (壓)
+            const nl = 2*cdp - pH;      // 近低 (撐)
+            const al = cdp - (pH - pL); // 最低
+            
+            // 這裡顯示 CDP 的近高與近低當作轉折參考
+            document.getElementById('pivot_p').innerText = Math.round(cdp);
+            document.getElementById('pivot_res').innerText = Math.round(nh);
+            document.getElementById('pivot_sup').innerText = Math.round(nl);
+        }
 
         if(!tx) return;
 
+        // --- 評分 ---
         let score = 0;
-        let analysis_text = "";
-
-        if (total > 5000) score += 30;
-        else if (total < -5000) score -= 30;
-        else {
-            if (trust > 10000 && sf < -10000) {
-                score += 10;
-                analysis_text = "投信護盤 vs 外資賣壓";
-            } else if (trust < -5000 && sf > 5000) {
-                score -= 10;
-                analysis_text = "投信棄守轉弱";
-            }
-        }
-
-        if (trust > 20000) score += 15;
-        if (sf < -20000) score -= 15;
+        if (total > 5000) score += 35;
+        else if (total < -5000) score -= 35;
 
         if(pc > 110) score += 20; else if(pc < 90) score -= 20;
-
-        if(retail_net > 3000) score -= 25; 
-        else if(retail_net < -3000) score += 25;
+        if(retail_net > 3000) score -= 25; else if(retail_net < -3000) score += 25;
 
         const vEl = document.getElementById('verdict');
         const dEl = document.getElementById('desc');
@@ -391,18 +323,18 @@
         const tp2 = document.getElementById('tp2');
 
         if(score >= 20) {
-            vEl.innerText = "🚀 震盪偏多"; vEl.style.color = "#ef4444";
-            dEl.innerText = analysis_text || `法人籌碼與P/C支撐共振`;
+            vEl.innerText = "🚀 偏多"; vEl.style.color = "#ef4444";
+            dEl.innerText = `主力 +${total} / 散戶反向`;
             tp1.innerText = Math.round(tx + atr); tp1.style.color="#ef4444";
             tp2.innerText = Math.round(tx + atr * 1.618); tp2.style.color="#ef4444";
         } else if(score <= -20) {
-            vEl.innerText = "📉 震盪偏空"; vEl.style.color = "#10b981";
-            dEl.innerText = analysis_text || `法人調節且壓力重`;
+            vEl.innerText = "📉 偏空"; vEl.style.color = "#10b981";
+            dEl.innerText = `主力 ${total} / 籌碼鬆動`;
             tp1.innerText = Math.round(tx - atr); tp1.style.color="#10b981";
             tp2.innerText = Math.round(tx - atr * 1.618); tp2.style.color="#10b981";
         } else {
-            vEl.innerText = "⚖️ 區間洗盤"; vEl.style.color = "#94a3b8";
-            dEl.innerText = analysis_text || `多空膠著，觀望為主`;
+            vEl.innerText = "⚖️ 震盪"; vEl.style.color = "#94a3b8";
+            dEl.innerText = `多空互抵，參考三關價操作`;
             tp1.innerText = Math.round(tx + atr * 0.5); tp1.style.color="#cbd5e1";
             tp2.innerText = Math.round(tx - atr * 0.5); tp2.style.color="#cbd5e1";
         }
@@ -422,7 +354,6 @@
         if(history.length > 14) history = history.slice(-14);
         localStorage.setItem('stock_history', JSON.stringify(history));
         updateChartFromStorage();
-        alert('已記錄今日數據');
     }
 
     function updateChartFromStorage() {
