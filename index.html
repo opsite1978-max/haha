@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>台指決策核心 V9.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --input-bg: #334155; --text: #f1f5f9; --red: #ef4444; --green: #10b981; --gold: #f59e0b; --blue: #3b82f6; --purple: #a855f7; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 120px; }
+        .container { max-width: 600px; margin: 0 auto; background: var(--card); border-radius: 16px; border: 1px solid #475569; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .header { background: linear-gradient(to right, #0f172a, #1e293b); padding: 15px; text-align: center; border-bottom: 1px solid #334155; }
+        h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px; color: #fff; }
+        .subtitle { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+
+        .chart-container { position: relative; height: 250px; width: 100%; padding: 10px; box-sizing: border-box; background: #0b1120; }
+
+        /* 數據傳送門 (新功能) */
+        .portal-bar { display: flex; gap: 5px; padding: 10px 15px; background: #111; overflow-x: auto; border-bottom: 1px solid #333; }
+        .portal-btn { flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; font-size: 11px; text-decoration: none; color: #fff; border: 1px solid #444; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
+        .portal-btn:hover { background: #333; border-color: #666; }
+        .portal-icon { font-size: 12px; }
+
+        .btn-group { padding: 10px 15px; display: flex; gap: 8px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+        .btn-auto { background: var(--blue); }
+        .btn-record { background: var(--green); }
+        .btn-clear { background: #475569; max-width: 60px; }
+
+        .section { padding: 0 15px 10px 15px; }
+        .section-title { font-size: 12px; color: #94a3b8; font-weight: 700; margin-bottom: 8px; border-left: 3px solid var(--blue); padding-left: 6px; }
+        
+        .row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .col { flex: 1; }
+        label { display: block; font-size: 10px; color: #cbd5e1; margin-bottom: 3px; }
+        input { width: 100%; background: var(--input-bg); border: 1px solid #475569; color: white; padding: 10px; border-radius: 6px; font-size: 16px; font-weight: 600; text-align: center; outline: none; }
+        input:focus { border-color: var(--blue); background: #1e293b; }
+
+        .hl-input input { border-color: var(--gold); background: #422006; color: #fbbf24; } 
+        .main-force-input input { border-color: var(--purple); background: #3b0764; color: #d8b4fe; }
+
+        /* 結果顯示 */
+        .verdict-box { background: #020617; padding: 15px; text-align: center; border-top: 1px solid #333; }
+        .verdict { font-size: 24px; font-weight: 900; margin-bottom: 5px; }
+        .desc { font-size: 12px; color: #94a3b8; }
+        
+        .history-log { max-height: 80px; overflow-y: auto; font-size: 10px; color: #666; padding: 10px; border-top: 1px solid #333; }
+        
+        #loading { display: none; animation: spin 1s infinite linear; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🚀 台指決策核心 V9.0</h1>
+        <div class="subtitle">數據傳送門 • 戰情儀表板</div>
+    </div>
+
+    <div class="portal-bar">
+        <a href="https://www.wantgoo.com/option/put-call-ratio" target="_blank" class="portal-btn">
+            <span class="portal-icon">🔗</span> 玩股網 P/C
+        </a>
+        <a href="https://www.taifex.com.tw/cht/3/futContractsDate" target="_blank" class="portal-btn">
+            <span class="portal-icon">🔗</span> 期交所主力
+        </a>
+        <a href="https://invest.cnyes.com/futures/TWS/TXF1" target="_blank" class="portal-btn">
+            <span class="portal-icon">🔗</span> 鉅亨網報價
+        </a>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="trendChart"></canvas>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn btn-auto" onclick="autoFetch()">
+            ⚡ 抓取大盤 <span id="loading">↻</span>
+        </button>
+        <button class="btn btn-record" onclick="recordData()">
+            💾 記錄
+        </button>
+        <button class="btn btn-clear" onclick="clearHistory()">🗑️</button>
+    </div>
+
+    <div class="section">
+        <div class="section-title">1. 價格與P/C (Input)</div>
+        <div class="row">
+            <div class="col hl-input">
+                <label>📍 台指期 (點位)</label>
+                <input type="number" id="tx" placeholder="輸入..." oninput="calc()">
+            </div>
+            <div class="col">
+                <label>🛡️ P/C Ratio (%)</label>
+                <input type="number" id="pc" placeholder="點上方連結" oninput="calc()">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>ATR 波動</label>
+                <input type="number" id="atr" oninput="calc()">
+            </div>
+             <input type="hidden" id="spot">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">2. 主力與散戶 (Input)</div>
+        <div class="row">
+            <div class="col main-force-input">
+                <label>🦁 主力淨口數</label>
+                <input type="number" id="main_force" placeholder="點上方連結" oninput="calc()">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>散戶多單 (小台+微台)</label>
+                <input type="number" id="retail_long" placeholder="量" oninput="calc()">
+            </div>
+            <div class="col">
+                <label>散戶空單 (小台+微台)</label>
+                <input type="number" id="retail_short" placeholder="量" oninput="calc()">
+            </div>
+        </div>
+    </div>
+
+    <div class="verdict-box">
+        <div id="verdict" class="verdict" style="color:#64748b">等待數據</div>
+        <div id="desc" class="desc">資料輸入後請按「記錄」以追蹤趨勢</div>
+        
+        <div style="display:flex; justify-content:space-around; margin-top:10px; border-top:1px dashed #333; padding-top:10px;">
+            <div>
+                <div style="font-size:10px; color:#888;">保守目標</div>
+                <div id="tp1" style="font-size:16px; font-weight:bold; color:#ccc;">--</div>
+            </div>
+            <div>
+                <div style="font-size:10px; color:#888;">積極目標</div>
+                <div id="tp2" style="font-size:16px; font-weight:bold; color:#ccc;">--</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="history-log" id="log-display">
+        歷史紀錄...
+    </div>
+</div>
+
+<script>
+    let myChart;
+    const ids = ['spot', 'atr', 'tx', 'main_force', 'pc', 'retail_long', 'retail_short'];
+
+    window.onload = () => {
+        ids.forEach(id => {
+            const v = localStorage.getItem('last_' + id);
+            if(v) document.getElementById(id).value = v;
+        });
+        initChart();
+        updateChartFromStorage();
+        calc();
+    };
+
+    function initChart() {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: '台指期', data: [], borderColor: '#3b82f6', yAxisID: 'y', borderWidth: 2, tension: 0.1 },
+                    { label: 'P/C %', data: [], borderColor: '#f59e0b', yAxisID: 'y1', borderWidth: 2, borderDash: [5, 5], tension: 0.1 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { labels: { color: '#ccc', boxWidth: 10 } } },
+                scales: {
+                    x: { ticks: { color: '#666' }, grid: { color: '#222' } },
+                    y: { type: 'linear', display: true, position: 'left', ticks: { color: '#3b82f6' }, grid: { color: '#333' } },
+                    y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#f59e0b' }, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+    }
+
+    async function autoFetch() {
+        const icon = document.getElementById('loading');
+        icon.style.display = 'inline-block';
+        try {
+            const ts = new Date().getTime();
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?interval=1d&range=5d&_=' + ts)}`);
+            const data = await res.json();
+            const result = JSON.parse(data.contents).chart.result[0];
+            const last = result.meta.regularMarketPrice;
+            const quotes = result.indicators.quote[0];
+            
+            let sum = 0, count = 0;
+            for(let i=0; i<quotes.high.length; i++) if(quotes.high[i]) { sum += (quotes.high[i] - quotes.low[i]); count++; }
+            const atr = count ? Math.round(sum/count) : 250;
+
+            document.getElementById('spot').value = Math.round(last);
+            document.getElementById('atr').value = atr;
+            if(!document.getElementById('tx').value) document.getElementById('tx').value = Math.round(last);
+            calc();
+        } catch(e) { alert('連線失敗，請手動輸入'); }
+        icon.style.display = 'none';
+    }
+
+    function calc() {
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            localStorage.setItem('last_' + id, el.value);
+        });
+
+        const tx = parseInt(document.getElementById('tx').value);
+        const atr = parseInt(document.getElementById('atr').value) || 250;
+        const main = parseInt(document.getElementById('main_force').value) || 0;
+        const pc = parseFloat(document.getElementById('pc').value) || 100;
+        const r_long = parseInt(document.getElementById('retail_long').value) || 0;
+        const r_short = parseInt(document.getElementById('retail_short').value) || 0;
+        const r_net = r_long - r_short;
+
+        let score = 0;
+        if(main > 5000) score += 30; else if(main < -5000) score -= 30;
+        if(pc > 110) score += 20; else if(pc < 90) score -= 20;
+        if(r_net > 2000) score -= 25; else if(r_net < -2000) score += 25;
+
+        const vEl = document.getElementById('verdict');
+        const dEl = document.getElementById('desc');
+        const tp1 = document.getElementById('tp1');
+        const tp2 = document.getElementById('tp2');
+
+        if(!tx) return;
+
+        if(score >= 20) {
+            vEl.innerText = "🚀 偏多"; vEl.style.color = "#ef4444";
+            dEl.innerText = "籌碼支撐強";
+            tp1.innerText = Math.round(tx + atr); tp1.style.color="#ef4444";
+            tp2.innerText = Math.round(tx + atr * 1.618); tp2.style.color="#ef4444";
+        } else if(score <= -20) {
+            vEl.innerText = "📉 偏空"; vEl.style.color = "#10b981";
+            dEl.innerText = "主力調節中";
+            tp1.innerText = Math.round(tx - atr); tp1.style.color="#10b981";
+            tp2.innerText = Math.round(tx - atr * 1.618); tp2.style.color="#10b981";
+        } else {
+            vEl.innerText = "⚖️ 震盪"; vEl.style.color = "#94a3b8";
+            dEl.innerText = "多空膠著";
+            tp1.innerText = "--"; tp2.innerText = "--";
+        }
+    }
+
+    function recordData() {
+        const tx = document.getElementById('tx').value;
+        const pc = document.getElementById('pc').value;
+        if(!tx || !pc) { alert("請先輸入數據"); return; }
+
+        const today = new Date();
+        const dateStr = (today.getMonth()+1) + "/" + today.getDate();
+        
+        const newData = { date: dateStr, tx: parseFloat(tx), pc: parseFloat(pc) };
+        let history = JSON.parse(localStorage.getItem('stock_history') || "[]");
+        
+        const existIdx = history.findIndex(d => d.date === dateStr);
+        if(existIdx >= 0) history[existIdx] = newData;
+        else history.push(newData);
+        
+        if(history.length > 14) history = history.slice(-14);
+
+        localStorage.setItem('stock_history', JSON.stringify(history));
+        updateChartFromStorage();
+    }
+
+    function updateChartFromStorage() {
+        const history = JSON.parse(localStorage.getItem('stock_history') || "[]");
+        const logEl = document.getElementById('log-display');
+        
+        myChart.data.labels = history.map(d => d.date);
+        myChart.data.datasets[0].data = history.map(d => d.tx);
+        myChart.data.datasets[1].data = history.map(d => d.pc);
+        myChart.update();
+
+        logEl.innerHTML = history.length ? history.map(d => `<span>[${d.date}] 指數:${d.tx} | P/C:${d.pc}%</span>`).join("<br>") : "尚無紀錄";
+    }
+
+    function clearHistory() {
+        if(confirm("清除紀錄？")) { localStorage.removeItem('stock_history'); updateChartFromStorage(); }
+    }
+</script>
+
+</body>
+</html>
