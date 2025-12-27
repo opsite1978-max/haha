@@ -3,115 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>台指決策核心 V14.0</title>
+    <title>台指戰情室 V16</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* APP 風格設定 */
         :root { --bg: #0f172a; --card: #1e293b; --input-bg: #334155; --text: #f1f5f9; --red: #ef4444; --green: #10b981; --gold: #f59e0b; --blue: #3b82f6; --purple: #a855f7; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 120px; }
-        .container { max-width: 600px; margin: 0 auto; background: var(--card); border-radius: 16px; border: 1px solid #475569; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 100px; -webkit-font-smoothing: antialiased; }
+        .app-container { max-width: 600px; margin: 0 auto; background: var(--card); min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         
-        .header { background: linear-gradient(to right, #0f172a, #1e293b); padding: 15px; text-align: center; border-bottom: 1px solid #334155; }
-        h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px; color: #fff; }
-        .subtitle { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+        /* 頂部導航 */
+        .header { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
+        h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 10px; color: #64748b; margin-top: 2px; }
 
-        .portal-bar { display: flex; gap: 8px; padding: 12px 15px; background: #0b1120; overflow-x: auto; border-bottom: 1px solid #333; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-        .portal-btn { flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; font-size: 11px; text-decoration: none; color: #cbd5e1; border: 1px solid #475569; transition: 0.2s; display: flex; align-items: center; gap: 4px; background: #1e293b; }
-        .portal-btn:hover { background: #334155; border-color: #94a3b8; color: #fff; }
-        .portal-icon { font-size: 12px; }
+        /* 數據傳送門 (橫向捲動) */
+        .portal-bar { display: flex; gap: 10px; padding: 12px 15px; background: #0b1120; overflow-x: auto; border-bottom: 1px solid #333; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .portal-bar::-webkit-scrollbar { display: none; }
+        .portal-btn { flex: 0 0 auto; padding: 8px 14px; border-radius: 20px; font-size: 12px; text-decoration: none; color: #cbd5e1; border: 1px solid #475569; transition: 0.2s; display: flex; align-items: center; gap: 6px; background: #1e293b; font-weight: 500; }
+        .portal-btn:active { transform: scale(0.95); background: #334155; border-color: var(--blue); color: #fff; }
 
-        .btn-group { padding: 10px 15px; display: flex; gap: 8px; }
-        .btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; }
-        .btn-auto { background: var(--blue); }
-        .btn-record { background: var(--green); }
-        .btn-clear { background: #475569; max-width: 60px; }
+        /* 圖表區 */
+        .chart-wrapper { padding: 15px; background: #0b1120; border-bottom: 1px solid #333; }
+        .chart-container { position: relative; height: 200px; width: 100%; }
 
-        .chart-container { position: relative; height: 180px; width: 100%; padding: 10px; box-sizing: border-box; background: #0b1120; }
+        /* 操作按鈕群 */
+        .btn-group { padding: 15px; display: grid; grid-template-columns: 2fr 1fr 0.5fr; gap: 10px; }
+        .btn { padding: 14px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-auto { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .btn-record { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-clear { background: #475569; }
 
-        .section { padding: 0 15px 10px 15px; }
-        .section-title { font-size: 12px; color: #94a3b8; font-weight: 700; margin-bottom: 8px; border-left: 3px solid var(--blue); padding-left: 6px; margin-top: 10px; display: flex; justify-content: space-between; }
+        /* 輸入區塊 */
+        .section { padding: 0 20px 15px 20px; animation: fadeIn 0.5s ease; }
+        .section-title { font-size: 13px; color: #94a3b8; font-weight: 700; margin-bottom: 10px; border-left: 4px solid var(--blue); padding-left: 8px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         
-        .row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .row { display: flex; gap: 10px; margin-bottom: 12px; }
         .col { flex: 1; }
-        label { display: block; font-size: 10px; color: #cbd5e1; margin-bottom: 3px; }
-        input { width: 100%; background: var(--input-bg); border: 1px solid #475569; color: white; padding: 10px; border-radius: 6px; font-size: 16px; font-weight: 600; text-align: center; outline: none; }
-        input:focus { border-color: var(--blue); background: #1e293b; }
+        label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: 500; }
+        input { width: 100%; background: var(--input-bg); border: 1px solid #475569; color: white; padding: 12px; border-radius: 8px; font-size: 18px; font-weight: 700; text-align: center; outline: none; box-sizing: border-box; transition: 0.2s; }
+        input:focus { border-color: var(--blue); background: #1e293b; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
 
-        .hl-input input { border-color: var(--gold); background: #422006; color: #fbbf24; } 
-        .total-input input { border-color: var(--purple); background: #3b0764; color: #d8b4fe; font-size: 18px; }
-        .retail-group { border: 1px dashed #475569; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
+        /* 特殊輸入框 */
+        .hl-input input { border-color: var(--gold); background: #422006; color: #fbbf24; font-size: 22px; } 
+        .op-input input { border-color: #8b5cf6; background: #2e1065; color: #d8b4fe; } 
+        .total-input input { border-color: #ec4899; background: #500724; color: #fbcfe8; font-size: 20px; }
+        
+        /* 選擇權戰場雷達 */
+        .op-radar-box { margin: 10px 0; padding: 15px; background: #111827; border: 1px solid #374151; border-radius: 12px; position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+        .op-bar-container { height: 16px; background: #334155; border-radius: 8px; position: relative; margin: 25px 0; overflow: hidden; }
+        .op-marker { position: absolute; top: -4px; bottom: -4px; width: 6px; background: #fff; border-radius: 3px; box-shadow: 0 0 10px #fff; z-index: 10; transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .zone-pressure { position: absolute; right: 0; top: 0; bottom: 0; width: 40%; background: linear-gradient(to left, rgba(239,68,68,0.6), transparent); }
+        .zone-support { position: absolute; left: 0; top: 0; bottom: 0; width: 40%; background: linear-gradient(to right, rgba(16,185,129,0.6), transparent); }
+        .op-space { display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; }
 
-        /* 關鍵點位顯示區 */
-        .key-levels-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 10px; }
-        .level-item { text-align: center; padding: 5px; background: #1e293b; border-radius: 4px; }
-        .level-title { font-size: 10px; color: #94a3b8; }
-        .level-val { font-size: 14px; font-weight: bold; color: #fff; }
+        /* 關鍵點位 */
+        .key-levels-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #0f172a; padding: 10px; border-radius: 10px; border: 1px solid #334155; }
+        .level-item { text-align: center; padding: 8px 4px; background: #1e293b; border-radius: 6px; }
+        .level-title { font-size: 10px; color: #64748b; margin-bottom: 2px; }
+        .level-val { font-size: 14px; font-weight: 800; color: #fff; }
         .level-up { color: #ef4444; } .level-mid { color: #f59e0b; } .level-down { color: #10b981; }
 
-        .verdict-box { background: #020617; padding: 15px; text-align: center; border-top: 1px solid #333; }
-        .verdict { font-size: 24px; font-weight: 900; margin-bottom: 5px; }
-        .desc { font-size: 12px; color: #94a3b8; }
-        .history-log { max-height: 80px; overflow-y: auto; font-size: 10px; color: #666; padding: 10px; border-top: 1px solid #333; }
-        
+        /* 判斷結果區 */
+        .verdict-box { background: rgba(15, 23, 42, 0.95); padding: 20px; text-align: center; border-top: 1px solid #333; position: sticky; bottom: 0; backdrop-filter: blur(10px); z-index: 90; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); border-radius: 20px 20px 0 0; }
+        .verdict { font-size: 26px; font-weight: 900; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .desc { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
+        .target-box { display: flex; justify-content: space-between; background: #1e293b; padding: 10px 20px; border-radius: 10px; margin-top: 10px; }
+
         #loading { display: none; animation: spin 1s infinite linear; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 隱藏元素 */
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="app-container">
     <div class="header">
-        <h1>🚀 台指決策核心 V14.0</h1>
-        <div class="subtitle">玩股網戰情 • 三關價 • 轉折關鍵點</div>
+        <h1>台指決策核心 V16.0</h1>
+        <div class="subtitle">戰場地圖 • 價差監控 • 智能分析</div>
     </div>
 
     <div class="portal-bar">
-        <a href="https://www.wantgoo.com/futures/institutional/net-open-interest" target="_blank" class="portal-btn">
-            <span class="portal-icon">🔗</span> 玩股主力
-        </a>
-        <a href="https://www.wantgoo.com/option/put-call-ratio" target="_blank" class="portal-btn">
-            <span class="portal-icon">🔗</span> P/C Ratio
-        </a>
-        <a href="https://www.wantgoo.com/futures/retail-indicator/wmt&" target="_blank" class="portal-btn">
-            <span class="portal-icon">🔗</span> 散戶指標
-        </a>
+        <a href="https://www.wantgoo.com/option/support-resistance" target="_blank" class="portal-btn">🛡️ 玩股OP大量區</a>
+        <a href="https://www.wantgoo.com/futures/institutional/net-open-interest" target="_blank" class="portal-btn">🦁 玩股主力</a>
+        <a href="https://www.wantgoo.com/option/put-call-ratio" target="_blank" class="portal-btn">📊 P/C Ratio</a>
+        <a href="https://www.wantgoo.com/futures/retail-indicator/wmt&" target="_blank" class="portal-btn">🐜 散戶指標</a>
     </div>
 
-    <div class="chart-container">
-        <canvas id="trendChart"></canvas>
+    <div class="chart-wrapper">
+        <div class="chart-container">
+            <canvas id="trendChart"></canvas>
+        </div>
     </div>
 
     <div class="btn-group">
         <button class="btn btn-auto" onclick="autoFetch()">
             ⚡ 抓取昨收/波動 <span id="loading">↻</span>
         </button>
-        <button class="btn btn-record" onclick="recordData()">
-            💾 記錄
-        </button>
+        <button class="btn btn-record" onclick="recordData()">💾 記錄</button>
         <button class="btn btn-clear" onclick="clearHistory()">🗑️</button>
     </div>
 
     <div class="section">
-        <div class="section-title">🔑 今日關鍵點位 (依昨收計算)</div>
-        <div class="key-levels-box">
-            <div class="level-item"><div class="level-title">上關 (壓)</div><div id="kp_high" class="level-val level-up">--</div></div>
-            <div class="level-item"><div class="level-title">中關 (分)</div><div id="kp_mid" class="level-val level-mid">--</div></div>
-            <div class="level-item"><div class="level-title">下關 (撐)</div><div id="kp_low" class="level-val level-down">--</div></div>
-            <div class="level-item"><div class="level-title">轉折壓</div><div id="pivot_res" class="level-val level-up">--</div></div>
-            <div class="level-item"><div class="level-title">轉折價</div><div id="pivot_p" class="level-val level-mid">--</div></div>
-            <div class="level-item"><div class="level-title">轉折撐</div><div id="pivot_sup" class="level-val level-down">--</div></div>
+        <div class="section-title">🛡️ 選擇權戰場 (輸入最大量區)</div>
+        <div class="row">
+            <div class="col op-input">
+                <label>地板 (最大 Put)</label>
+                <input type="number" id="op_support" placeholder="例如 28200" oninput="calc()">
+            </div>
+            <div class="col op-input">
+                <label>天花板 (最大 Call)</label>
+                <input type="number" id="op_pressure" placeholder="例如 29000" oninput="calc()">
+            </div>
         </div>
-        <div style="display:none;">
-            <input id="prev_high"><input id="prev_low"><input id="prev_close">
+        
+        <div class="op-radar-box">
+            <div class="op-space">
+                <span id="space-down" style="color:#10b981;">等待數據</span>
+                <span id="space-up" style="color:#ef4444;">等待數據</span>
+            </div>
+            <div class="op-bar-container">
+                <div class="zone-support"></div>
+                <div class="zone-pressure"></div>
+                <div id="price-marker" class="op-marker" style="left: 50%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:#666; font-size:10px;">
+                <span>支撐區</span>
+                <span id="radar-tx" style="color:#fff; font-weight:bold;">--</span>
+                <span>壓力區</span>
+            </div>
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">1. 價格與 P/C</div>
+        <div class="section-title">
+            <span>1. 價格監控</span>
+            <span id="spread-tag" style="font-size:11px; padding:2px 6px; border-radius:4px; background:#333;">--</span>
+        </div>
         <div class="row">
             <div class="col hl-input">
-                <label>📍 台指期 (目前)</label>
-                <input type="number" id="tx" placeholder="輸入..." oninput="calc()">
+                <label>📍 台指期 (必填)</label>
+                <input type="number" id="tx" placeholder="輸入目前點數" oninput="calc()">
             </div>
+            <div class="col">
+                <label>⚖️ 加權指數 (自動)</label>
+                <input type="number" id="spot" disabled placeholder="自動抓取" oninput="calc()">
+            </div>
+        </div>
+        <div class="row">
             <div class="col">
                 <label>🛡️ P/C Ratio (%)</label>
                 <input type="number" id="pc" placeholder="手動輸入" oninput="calc()">
@@ -124,48 +166,60 @@
     </div>
 
     <div class="section">
-        <div class="section-title">2. 主力籌碼 (看玩股網填總和)</div>
+        <div class="section-title">2. 主力籌碼</div>
         <div class="row">
             <div class="col total-input">
                 <label>🦁 法人總和 (自+投+外)</label>
-                <input type="number" id="total_sum" placeholder="看玩股網「總和」欄位" oninput="calc()">
+                <input type="number" id="total_sum" placeholder="看玩股網填入" oninput="calc()">
             </div>
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">3. 散戶 (輸入看盤軟體數值)</div>
-        <div class="retail-group">
-            <div class="row">
+        <div class="section-title">3. 散戶 (輸入口數)</div>
+        <div style="background:#1e293b; padding:10px; border-radius:8px; border:1px solid #334155;">
+            <div style="font-size:11px; color:#aaa; margin-bottom:5px; text-align:center;">小台 MTX</div>
+            <div class="row" style="margin-bottom:0;">
                 <div class="col">
-                    <label style="color:#fca5a5;">小台多單</label>
-                    <input type="number" id="mtx_long" placeholder="量" style="color:#fca5a5; border-color:#991b1b;" oninput="calc()">
+                    <input type="number" id="mtx_long" placeholder="多單" style="color:#fca5a5; border-color:#7f1d1d;" oninput="calc()">
                 </div>
                 <div class="col">
-                    <label style="color:#86efac;">小台空單</label>
-                    <input type="number" id="mtx_short" placeholder="量" style="color:#86efac; border-color:#065f46;" oninput="calc()">
+                    <input type="number" id="mtx_short" placeholder="空單" style="color:#86efac; border-color:#064e3b;" oninput="calc()">
                 </div>
             </div>
         </div>
-        <div class="retail-group">
-            <div class="row">
+        <div style="height:8px;"></div>
+        <div style="background:#1e293b; padding:10px; border-radius:8px; border:1px solid #334155;">
+            <div style="font-size:11px; color:#aaa; margin-bottom:5px; text-align:center;">微台 TMF</div>
+            <div class="row" style="margin-bottom:0;">
                 <div class="col">
-                    <label style="color:#fca5a5;">微台多單</label>
-                    <input type="number" id="tmf_long" placeholder="量" style="color:#fca5a5; border-color:#991b1b;" oninput="calc()">
+                    <input type="number" id="tmf_long" placeholder="多單" style="color:#fca5a5; border-color:#7f1d1d;" oninput="calc()">
                 </div>
                 <div class="col">
-                    <label style="color:#86efac;">微台空單</label>
-                    <input type="number" id="tmf_short" placeholder="量" style="color:#86efac; border-color:#065f46;" oninput="calc()">
+                    <input type="number" id="tmf_short" placeholder="空單" style="color:#86efac; border-color:#064e3b;" oninput="calc()">
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="section" style="margin-bottom:20px;">
+        <div class="section-title">🔑 參考點位 (昨收計算)</div>
+        <div class="key-levels-box">
+            <div class="level-item"><div class="level-title">上關</div><div id="kp_high" class="level-val level-up">--</div></div>
+            <div class="level-item"><div class="level-title">中關</div><div id="kp_mid" class="level-val level-mid">--</div></div>
+            <div class="level-item"><div class="level-title">下關</div><div id="kp_low" class="level-val level-down">--</div></div>
+            <div class="level-item"><div class="level-title">轉折壓</div><div id="pivot_res" class="level-val level-up">--</div></div>
+            <div class="level-item"><div class="level-title">轉折價</div><div id="pivot_p" class="level-val level-mid">--</div></div>
+            <div class="level-item"><div class="level-title">轉折撐</div><div id="pivot_sup" class="level-val level-down">--</div></div>
+        </div>
+        <div class="hidden"><input id="prev_high"><input id="prev_low"><input id="prev_close"></div>
+    </div>
+
     <div class="verdict-box">
         <div id="verdict" class="verdict" style="color:#64748b">等待數據</div>
-        <div id="desc" class="desc">填寫後自動分析多空</div>
+        <div id="desc" class="desc">填寫後自動分析多空戰略</div>
         
-        <div style="display:flex; justify-content:space-around; margin-top:10px; border-top:1px dashed #333; padding-top:10px;">
+        <div class="target-box">
             <div>
                 <div style="font-size:10px; color:#888;">保守目標</div>
                 <div id="tp1" style="font-size:16px; font-weight:bold; color:#ccc;">--</div>
@@ -176,13 +230,11 @@
             </div>
         </div>
     </div>
-    
-    <div class="history-log" id="log-display">歷史紀錄...</div>
 </div>
 
 <script>
     let myChart;
-    const ids = ['tx', 'atr', 'total_sum', 'pc', 'mtx_long', 'mtx_short', 'tmf_long', 'tmf_short', 'prev_high', 'prev_low', 'prev_close'];
+    const ids = ['tx', 'spot', 'atr', 'total_sum', 'pc', 'mtx_long', 'mtx_short', 'tmf_long', 'tmf_short', 'prev_high', 'prev_low', 'prev_close', 'op_support', 'op_pressure'];
 
     window.onload = () => {
         ids.forEach(id => {
@@ -196,22 +248,24 @@
 
     function initChart() {
         const ctx = document.getElementById('trendChart').getContext('2d');
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.font.family = '-apple-system, system-ui';
         myChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [
-                    { label: '台指期', data: [], borderColor: '#3b82f6', yAxisID: 'y', borderWidth: 2, tension: 0.1 },
-                    { label: 'P/C %', data: [], borderColor: '#f59e0b', yAxisID: 'y1', borderWidth: 2, borderDash: [5, 5], tension: 0.1 }
+                    { label: '台指期', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, yAxisID: 'y', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'P/C %', data: [], borderColor: '#f59e0b', yAxisID: 'y1', borderWidth: 2, borderDash: [4, 4], tension: 0.1, pointRadius: 0 }
                 ]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
-                plugins: { legend: { labels: { color: '#ccc', boxWidth: 10 } } },
+                plugins: { legend: { labels: { color: '#ccc', boxWidth: 10, font: {size: 11} } } },
                 scales: {
-                    x: { ticks: { color: '#666' }, grid: { color: '#222' } },
-                    y: { type: 'linear', display: true, position: 'left', ticks: { color: '#3b82f6' }, grid: { color: '#333' } },
+                    x: { ticks: { color: '#666', font: {size: 10} }, grid: { display: false } },
+                    y: { type: 'linear', display: true, position: 'left', ticks: { color: '#3b82f6' }, grid: { color: '#1e293b' } },
                     y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#f59e0b' }, grid: { drawOnChartArea: false } }
                 }
             }
@@ -227,11 +281,10 @@
             const data = await res.json();
             const result = JSON.parse(data.contents).chart.result[0];
             const quotes = result.indicators.quote[0];
-            
             const len = quotes.close.length;
+            
             let idx = len - 1;
             if (len >= 2) idx = len - 2;
-
             const prevH = quotes.high[idx];
             const prevL = quotes.low[idx];
             const prevC = quotes.close[idx];
@@ -244,6 +297,7 @@
             const atr = count ? Math.round(sum/count) : 250;
 
             document.getElementById('atr').value = atr;
+            document.getElementById('spot').value = Math.round(lastPrice);
             document.getElementById('prev_high').value = prevH;
             document.getElementById('prev_low').value = prevL;
             document.getElementById('prev_close').value = prevC;
@@ -251,7 +305,7 @@
             if(!document.getElementById('tx').value) document.getElementById('tx').value = Math.round(lastPrice);
             
             calc();
-        } catch(e) { alert('抓取失敗，請檢查網路'); }
+        } catch(e) { alert('連線失敗，請稍後再試'); }
         icon.style.display = 'none';
     }
 
@@ -262,6 +316,7 @@
         });
 
         const tx = parseInt(document.getElementById('tx').value);
+        const spot = parseInt(document.getElementById('spot').value);
         const atr = parseInt(document.getElementById('atr').value) || 250;
         const total = parseInt(document.getElementById('total_sum').value) || 0;
         const pc = parseFloat(document.getElementById('pc').value) || 100;
@@ -272,38 +327,60 @@
         const tmf_S = parseInt(document.getElementById('tmf_short').value) || 0;
         const retail_net = (mtx_L - mtx_S) + ((tmf_L - tmf_S) * 0.2);
 
-        // --- 三關價與轉折價計算 ---
+        // 雷達
+        const op_sup = parseInt(document.getElementById('op_support').value);
+        const op_pres = parseInt(document.getElementById('op_pressure').value);
+        if(op_sup && op_pres && tx) {
+            const range = op_pres - op_sup;
+            const pos = tx - op_sup;
+            let pct = (pos / range) * 100;
+            if(pct < 0) pct = 0; if(pct > 100) pct = 100;
+            document.getElementById('price-marker').style.left = pct + "%";
+            document.getElementById('space-up').innerText = `距壓力 ${op_pres - tx}`;
+            document.getElementById('space-down').innerText = `距支撐 ${tx - op_sup}`;
+            document.getElementById('radar-tx').innerText = tx;
+        }
+
+        // 價差
+        const sTag = document.getElementById('spread-tag');
+        if (tx && spot) {
+            let spread = tx - spot;
+            if (spread > 0) {
+                sTag.innerText = `正價差 +${spread}`; sTag.style.background = "#b91c1c"; sTag.style.color = "#fff";
+            } else {
+                sTag.innerText = `逆價差 ${spread}`; sTag.style.background = "#047857"; sTag.style.color = "#fff";
+            }
+        }
+
+        // 關鍵點位
         const pH = parseFloat(document.getElementById('prev_high').value);
         const pL = parseFloat(document.getElementById('prev_low').value);
         const pC = parseFloat(document.getElementById('prev_close').value);
-
         if (pH && pL && pC) {
             const mid = (pH + pL) / 2;
             const up = pL + (pH - pL) * 0.618;
             const down = pH - (pH - pL) * 0.618;
-
             document.getElementById('kp_high').innerText = Math.round(up);
             document.getElementById('kp_mid').innerText = Math.round(mid);
             document.getElementById('kp_low').innerText = Math.round(down);
-
             const cdp = (pH + pL + 2*pC) / 4;
-            const nh = 2*cdp - pL;      
-            const nl = 2*cdp - pH;      
-            
             document.getElementById('pivot_p').innerText = Math.round(cdp);
-            document.getElementById('pivot_res').innerText = Math.round(nh);
-            document.getElementById('pivot_sup').innerText = Math.round(nl);
+            document.getElementById('pivot_res').innerText = Math.round(2*cdp - pL);
+            document.getElementById('pivot_sup').innerText = Math.round(2*cdp - pH);
         }
 
         if(!tx) return;
 
-        // --- 評分 ---
+        // 評分
         let score = 0;
-        if (total > 5000) score += 35;
-        else if (total < -5000) score -= 35;
-
+        if (total > 5000) score += 35; else if (total < -5000) score -= 35;
         if(pc > 110) score += 20; else if(pc < 90) score -= 20;
         if(retail_net > 3000) score -= 25; else if(retail_net < -3000) score += 25;
+        if (tx && spot) {
+            let s = tx - spot;
+            if (s > 20 && s < 100) score += 5;
+            if (s < -20 && s > -100) score -= 5;
+        }
 
         const vEl = document.getElementById('verdict');
         const dEl = document.getElementById('desc');
@@ -311,18 +388,18 @@
         const tp2 = document.getElementById('tp2');
 
         if(score >= 20) {
-            vEl.innerText = "🚀 偏多"; vEl.style.color = "#ef4444";
-            dEl.innerText = `主力 +${total} / 散戶反向`;
+            vEl.innerText = "🚀 震盪偏多"; vEl.style.color = "#ef4444";
+            dEl.innerText = `籌碼支撐強，拉回找買點`;
             tp1.innerText = Math.round(tx + atr); tp1.style.color="#ef4444";
             tp2.innerText = Math.round(tx + atr * 1.618); tp2.style.color="#ef4444";
         } else if(score <= -20) {
-            vEl.innerText = "📉 偏空"; vEl.style.color = "#10b981";
-            dEl.innerText = `主力 ${total} / 籌碼鬆動`;
+            vEl.innerText = "📉 震盪偏空"; vEl.style.color = "#10b981";
+            dEl.innerText = `籌碼鬆動，反彈空`;
             tp1.innerText = Math.round(tx - atr); tp1.style.color="#10b981";
             tp2.innerText = Math.round(tx - atr * 1.618); tp2.style.color="#10b981";
         } else {
-            vEl.innerText = "⚖️ 震盪"; vEl.style.color = "#94a3b8";
-            dEl.innerText = `多空互抵，參考三關價操作`;
+            vEl.innerText = "⚖️ 區間洗盤"; vEl.style.color = "#94a3b8";
+            dEl.innerText = `多空互抵，區間操作`;
             tp1.innerText = Math.round(tx + atr * 0.5); tp1.style.color="#cbd5e1";
             tp2.innerText = Math.round(tx - atr * 0.5); tp2.style.color="#cbd5e1";
         }
@@ -339,19 +416,17 @@
         const existIdx = history.findIndex(d => d.date === dateStr);
         if(existIdx >= 0) history[existIdx] = newData;
         else history.push(newData);
-        if(history.length > 14) history = history.slice(-14);
+        if(history.length > 20) history = history.slice(-20);
         localStorage.setItem('stock_history', JSON.stringify(history));
         updateChartFromStorage();
     }
 
     function updateChartFromStorage() {
         const history = JSON.parse(localStorage.getItem('stock_history') || "[]");
-        const logEl = document.getElementById('log-display');
         myChart.data.labels = history.map(d => d.date);
         myChart.data.datasets[0].data = history.map(d => d.tx);
         myChart.data.datasets[1].data = history.map(d => d.pc);
         myChart.update();
-        logEl.innerHTML = history.length ? history.map(d => `<span>[${d.date}] 指數:${d.tx} | P/C:${d.pc}%</span>`).join("<br>") : "尚無紀錄";
     }
 
     function clearHistory() {
